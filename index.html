@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id" translate="no">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>PageOnline OS</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="stylesheet" href="src/styles/boot.css">
+    <link rel="stylesheet" href="src/styles/os.css">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/assets/fonts/Poppins-Medium.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/assets/fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Power Screen -->
+        <div id="power-screen" class="screen active">
+            <div class="power-container">
+                <button id="power-button" class="power-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="power-icon">
+                        <defs>
+                            <linearGradient id="power-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1dbde6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#f1515e;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0 M12 2L12 12"></path>
+                    </svg>
+                </button>
+                <p id="power-text">Klik untuk Memulai</p>
+            </div>
+        </div>
+
+        <!-- Booting Screen -->
+        <div id="boot-screen" class="screen">
+            <div class="boot-container">
+                <div class="os-logo">
+                    <span class="logo-text">PageOnline <span>OS</span></span>
+                </div>
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen">
+            <div class="welcome-container">
+                <div class="welcome-profile">
+                    <div class="welcome-avatar">U</div>
+                    <div class="welcome-user"><span id="welcome-user-text">User</span></div>
+                </div>
+                <div class="loading-spinner white"></div>
+            </div>
+        </div>
+
+        <!-- Shutdown Screen -->
+        <div id="shutdown-screen" class="screen">
+            <div class="welcome-container">
+                <div class="welcome-user"><span id="shutdown-user-text">Mematikan Daya...</span></div>
+                <div class="loading-spinner white"></div>
+            </div>
+        </div>
+
+        <!-- OS Desktop Screen -->
+        <div id="desktop-screen" class="screen">
+            <div class="desktop-wallpaper"></div>
+            <!-- Desktop Layout -->
+            <div class="desktop-container">
+                <div class="desktop-icons" id="desktop-icons">
+                </div>
+            </div>
+
+            <!-- Window Container for Apps -->
+            <div id="window-container"></div>
+
+            <!-- Taskbar -->
+            <div class="taskbar">
+                <button id="start-btn" class="taskbar-btn">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <defs>
+                            <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1dbde6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#f1515e;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                            fill="url(#icon-gradient)" />
+                        <circle cx="12" cy="12" r="5" fill="url(#icon-gradient)" />
+                    </svg>
+                </button>
+                <div class="taskbar-apps" id="taskbar-apps"></div>
+                <div class="taskbar-tray">
+                    <div id="system-clock" class="tray-item">00:00</div>
+                    <div id="lang-switch" class="tray-item lang-btn">ID</div>
+                </div>
+            </div>
+
+            <!-- Start Menu Overlay -->
+            <div id="start-menu" class="start-menu">
+                <div class="start-menu-content">
+                    <div class="user-profile">
+                        <div class="avatar">U</div>
+                        <span class="username">User</span>
+                    </div>
+                    <div class="app-list" id="start-app-list">
+                    </div>
+                    <div class="start-menu-footer">
+                        <button id="shutdown-btn" class="footer-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" y1="2" x2="12" y2="12"></line>
+                            </svg>
+                            <span>Matikan</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>
