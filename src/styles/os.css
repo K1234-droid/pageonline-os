@@ -351,7 +351,8 @@ body.peek-mode .window.minimized.peek-focus {
     pointer-events: none;
 }
 
-.taskbar-app-icon:hover {
+.taskbar-app-icon:hover,
+.taskbar-app-icon.minimized {
     background: rgba(255, 255, 255, 0.1);
 }
 
@@ -375,7 +376,7 @@ body.peek-mode .window.minimized.peek-focus {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
@@ -594,7 +595,7 @@ body.peek-mode .window.minimized.peek-focus {
     background: rgba(255, 255, 255, 0.1);
     padding: 4px 8px;
     border-radius: 6px;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 0.75rem;
     cursor: pointer;
     transition: var(--transition-smooth);
@@ -898,7 +899,7 @@ body.peek-mode .window.minimized.peek-focus {
 
 .context-menu {
     position: fixed;
-    z-index: 10000;
+    z-index: 100000;
     min-width: 180px;
     background: rgba(15, 15, 20, 0.85);
     border: var(--border-glass);
@@ -914,7 +915,7 @@ body.peek-mode .window.minimized.peek-focus {
 
 #preview-ctx-menu,
 #custom-context-menu {
-    z-index: 10005 !important;
+    z-index: 100005 !important;
 }
 
 @keyframes contextFadeIn {
@@ -963,7 +964,7 @@ body.peek-mode .window.minimized.peek-focus {
 
 .app-tooltip {
     position: fixed;
-    z-index: 10001;
+    z-index: 100001;
     background: #0f0f14;
     color: white;
     padding: 6px 12px;

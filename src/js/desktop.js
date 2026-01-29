@@ -64,6 +64,12 @@ export function initDesktop() {
         }
     };
 
+    const trayObserver = new ResizeObserver(() => {
+        requestAnimationFrame(() => renderTaskbarApps());
+    });
+    const tray = taskbar.querySelector('.taskbar-tray');
+    if (tray) trayObserver.observe(tray);
+
     const apps = [
         { id: 'settings', icon: '⚙️', label: 'apps.settings' },
         { id: 'browser', icon: '🌐', label: 'apps.browser' },
@@ -1224,6 +1230,7 @@ export function initDesktop() {
 
         updateTaskbarAutohide();
         focusWindow(win.id.replace('win-', ''));
+        renderTaskbarApps();
     }
 
     function restoreWindow(win, rect) {
@@ -1234,6 +1241,7 @@ export function initDesktop() {
             restoreOtherWindows(win);
 
             updateTaskbarAutohide();
+            renderTaskbarApps();
         }
         if (rect) {
             win.style.left = rect.left;
@@ -1509,7 +1517,10 @@ export function initDesktop() {
             };
 
             const isFocused = renderData.instances.some(inst => inst.instanceId === state.focusedApp);
+            const isMinimized = renderData.isActive && !isFocused;
+
             appIcon.classList.toggle('active', isFocused);
+            appIcon.classList.toggle('minimized', isMinimized);
             appIcon.classList.toggle('running', renderData.isActive);
             appIcon.classList.remove('removing');
 
