@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 e.stopImmediatePropagation();
 
-                if (state.startMenuOpen) {
-                    setState({ startMenuOpen: false });
+                if (state.appListOpen) {
+                    setState({ appListOpen: false });
                 }
 
                 if (window.closeOSContextMenu) {

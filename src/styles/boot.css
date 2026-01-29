@@ -120,7 +120,7 @@
 
 #welcome-screen,
 #shutdown-screen {
-    background: linear-gradient(135deg, #091f2b 0%, #0d121c 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #500724 100%);
     z-index: 100;
 }
 

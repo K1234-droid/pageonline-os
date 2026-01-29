@@ -1,4 +1,4 @@
-import { state, setState, toggleLanguage, toggleStartMenu, addActiveApp, removeActiveApp, focusApp, togglePinDesktop, togglePinTaskbar } from './state.js';
+import { state, setState, toggleLanguage, toggleAppList, addActiveApp, removeActiveApp, focusApp, togglePinDesktop, togglePinTaskbar } from './state.js';
 import { t } from './i18n.js';
 
 export function initDesktop() {
@@ -7,13 +7,13 @@ export function initDesktop() {
     let keyboardFocusId = null;
     let lastActiveId = null;
 
-    const startBtn = document.getElementById('start-btn');
-    const startMenu = document.getElementById('start-menu');
+    const appListBtn = document.getElementById('app-list-btn');
+    const appListMenu = document.getElementById('app-list-menu');
     const desktopIcons = document.getElementById('desktop-icons');
     const langBtn = document.getElementById('lang-switch');
     const clock = document.getElementById('system-clock');
     const appContainer = document.getElementById('window-container');
-    const startAppList = document.getElementById('start-app-list');
+    const appListContent = document.getElementById('app-list-content');
     const shutdownBtn = document.getElementById('shutdown-btn');
     const taskbar = document.querySelector('.taskbar');
 
@@ -31,7 +31,7 @@ export function initDesktop() {
     let maximizedCount = 0;
 
     function updateTaskbarAutohide() {
-        const isMenuOpen = state.startMenuOpen ||
+        const isMenuOpen = state.appListOpen ||
             (document.getElementById('custom-context-menu')?.style.display === 'block') ||
             (document.getElementById('overflow-menu')?.style.display === 'block') ||
             (document.getElementById('group-preview-menu')?.style.display === 'block');
@@ -126,12 +126,12 @@ export function initDesktop() {
 
     function activateDesktop() {
         focusWindow(null);
-        if (state.startMenuOpen) setState({ startMenuOpen: false });
+        if (state.appListOpen) setState({ appListOpen: false });
     }
 
-    startBtn.onclick = (e) => {
+    appListBtn.onclick = (e) => {
         e.stopPropagation();
-        toggleStartMenu();
+        toggleAppList();
     };
 
     langBtn.onclick = (e) => {
@@ -141,7 +141,7 @@ export function initDesktop() {
 
     if (window._desktopGlobalClick) document.removeEventListener('click', window._desktopGlobalClick);
     window._desktopGlobalClick = () => {
-        if (state.startMenuOpen) setState({ startMenuOpen: false });
+        if (state.appListOpen) setState({ appListOpen: false });
     };
     document.addEventListener('click', window._desktopGlobalClick);
 
@@ -157,7 +157,7 @@ export function initDesktop() {
     };
     document.addEventListener('mousedown', window._desktopGlobalMousedown);
 
-    startMenu.addEventListener('click', (e) => e.stopPropagation());
+    appListMenu.addEventListener('click', (e) => e.stopPropagation());
 
     const desktopContainer = document.querySelector('.desktop-container');
 
@@ -177,7 +177,7 @@ export function initDesktop() {
     let initialSelection = [];
 
     desktopContainer.addEventListener('mousedown', (e) => {
-        if (state.startMenuOpen) setState({ startMenuOpen: false });
+        if (state.appListOpen) setState({ appListOpen: false });
 
         if (e.target === desktopContainer || e.target.id === 'desktop-icons') {
             focusWindow(null);
@@ -268,7 +268,7 @@ export function initDesktop() {
             return;
         }
 
-        if (state.startMenuOpen) return;
+        if (state.appListOpen) return;
         const activeMenus = [
             document.getElementById('custom-context-menu'),
             document.getElementById('overflow-menu'),
@@ -931,8 +931,8 @@ export function initDesktop() {
     });
     resizeObserver.observe(desktopContainer);
 
-    function renderStartApps() {
-        startAppList.innerHTML = '';
+    function renderAppListItems() {
+        appListContent.innerHTML = '';
 
         const sortedApps = [...apps].sort((a, b) => {
             const labelA = t(a.label, state.language);
@@ -942,7 +942,7 @@ export function initDesktop() {
 
         sortedApps.forEach(app => {
             const item = document.createElement('div');
-            item.className = 'start-app-item';
+            item.className = 'app-list-item';
             item.setAttribute('draggable', 'true');
             item.innerHTML = `
         <div class="app-icon ${app.id === 'files' ? 'folder' : ''}">${app.icon}</div>
@@ -950,7 +950,7 @@ export function initDesktop() {
       `;
             item.onclick = () => {
                 openApp(app);
-                setState({ startMenuOpen: false });
+                setState({ appListOpen: false });
             };
             item.oncontextmenu = (e) => {
                 e.preventDefault();
@@ -966,7 +966,7 @@ export function initDesktop() {
                 gridOverlay.classList.remove('visible');
             };
 
-            startAppList.appendChild(item);
+            appListContent.appendChild(item);
         });
     }
 
@@ -1067,7 +1067,7 @@ export function initDesktop() {
 
         win.onmousedown = () => {
             focusWindow(appInstance.instanceId);
-            if (state.startMenuOpen) setState({ startMenuOpen: false });
+            if (state.appListOpen) setState({ appListOpen: false });
         };
 
         win._isMaximized = false;
@@ -1078,7 +1078,7 @@ export function initDesktop() {
         closeBtn.onclick = (e) => {
             e.stopPropagation();
             focusWindow(appInstance.instanceId);
-            if (state.startMenuOpen) setState({ startMenuOpen: false });
+            if (state.appListOpen) setState({ appListOpen: false });
             closeWindow(appInstance.instanceId);
         };
 
@@ -1106,7 +1106,7 @@ export function initDesktop() {
         maxBtn.onclick = (e) => {
             e.stopPropagation();
             focusWindow(appInstance.instanceId);
-            if (state.startMenuOpen) setState({ startMenuOpen: false });
+            if (state.appListOpen) setState({ appListOpen: false });
             toggleMaximize();
         };
 
@@ -1115,7 +1115,7 @@ export function initDesktop() {
         minBtn.onclick = (e) => {
             e.stopPropagation();
             focusWindow(appInstance.instanceId);
-            if (state.startMenuOpen) setState({ startMenuOpen: false });
+            if (state.appListOpen) setState({ appListOpen: false });
             minimizeWindow(appInstance.instanceId);
         };
 
@@ -1123,7 +1123,7 @@ export function initDesktop() {
 
         header.ondblclick = (e) => {
             e.stopPropagation();
-            if (state.startMenuOpen) setState({ startMenuOpen: false });
+            if (state.appListOpen) setState({ appListOpen: false });
             toggleMaximize();
         };
 
@@ -1179,7 +1179,7 @@ export function initDesktop() {
                 if (win._isMaximized) return;
                 e.preventDefault();
                 e.stopPropagation();
-                if (state.startMenuOpen) setState({ startMenuOpen: false });
+                if (state.appListOpen) setState({ appListOpen: false });
                 focusWindow(appInstance.instanceId);
 
                 const startWidth = win.offsetWidth;
@@ -2039,7 +2039,7 @@ export function initDesktop() {
             bind('ctx-open', () => {
                 openApp(app);
                 menu.style.display = 'none';
-                if (state.startMenuOpen) setState({ startMenuOpen: false });
+                if (state.appListOpen) setState({ appListOpen: false });
             });
             bind('ctx-pin-desktop', () => {
                 const style = getComputedStyle(document.querySelector('.desktop-container'));
@@ -2250,19 +2250,19 @@ export function initDesktop() {
         }
         lastPowerStatus = s.powerStatus;
 
-        if (s.startMenuOpen) {
-            startMenu.classList.add('active');
-            startBtn.classList.add('active');
+        if (s.appListOpen) {
+            appListMenu.classList.add('active');
+            appListBtn.classList.add('active');
         } else {
-            startMenu.classList.remove('active');
-            startBtn.classList.remove('active');
+            appListMenu.classList.remove('active');
+            appListBtn.classList.remove('active');
         }
 
         closeOSContextMenu();
 
         langBtn.innerText = s.language.toUpperCase();
         renderIcons();
-        renderStartApps();
+        renderAppListItems();
         renderTaskbarApps();
         updateClock();
         updateTaskbarAutohide();

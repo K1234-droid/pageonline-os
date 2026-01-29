@@ -101,8 +101,8 @@ export function focusApp(instanceId) {
   notify();
 }
 
-export function toggleStartMenu() {
-  setState({ startMenuOpen: !state.startMenuOpen });
+export function toggleAppList() {
+  setState({ appListOpen: !state.appListOpen });
 }
 
 export function togglePinDesktop(id, maxCols = 10) {

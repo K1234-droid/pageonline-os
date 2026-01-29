@@ -11,9 +11,6 @@
     <link rel="stylesheet" href="src/styles/os.css">
     <link rel="icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/icon-192.png">
-    <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/assets/fonts/Poppins-Medium.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/assets/fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 
 <body>
@@ -80,7 +77,7 @@
 
             <!-- Taskbar -->
             <div class="taskbar">
-                <button id="start-btn" class="taskbar-btn">
+                <button id="app-list-btn" class="taskbar-btn">
                     <svg viewBox="0 0 24 24" fill="none">
                         <defs>
                             <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -101,16 +98,16 @@
                 </div>
             </div>
 
-            <!-- Start Menu Overlay -->
-            <div id="start-menu" class="start-menu">
-                <div class="start-menu-content">
+            <!-- App List Overlay -->
+            <div id="app-list-menu" class="app-list-menu">
+                <div class="app-list-container">
                     <div class="user-profile">
                         <div class="avatar">U</div>
                         <span class="username">User</span>
                     </div>
-                    <div class="app-list" id="start-app-list">
+                    <div class="app-list-content" id="app-list-content">
                     </div>
-                    <div class="start-menu-footer">
+                    <div class="app-list-footer">
                         <button id="shutdown-btn" class="footer-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>

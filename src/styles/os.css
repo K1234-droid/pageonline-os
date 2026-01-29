@@ -9,7 +9,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(135deg, #0d3b4f 0%, #0f172a 100%) no-repeat;
+    background: linear-gradient(135deg, #1e293b 0%, #831843 100%) no-repeat;
     background-size: cover;
     z-index: 0;
 }
@@ -286,7 +286,7 @@ body.peek-mode .window.minimized.peek-focus {
     background: rgba(255, 255, 255, 0.1);
 }
 
-#start-btn {
+#app-list-btn {
     background: rgba(255, 255, 255, 0.05);
     color: var(--accent-color);
     position: relative;
@@ -294,20 +294,20 @@ body.peek-mode .window.minimized.peek-focus {
     transition: background 0.3s ease;
 }
 
-#start-btn:hover {
+#app-list-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.1);
 }
 
-#start-btn.active {
+#app-list-btn.active {
     background: rgba(var(--accent-rgb), 0.2);
 }
 
-#start-btn.active::after {
+#app-list-btn.active::after {
     display: none;
 }
 
-#start-btn svg {
+#app-list-btn svg {
     width: 26px;
     height: 26px;
 }
@@ -600,7 +600,7 @@ body.peek-mode .window.minimized.peek-focus {
     transition: var(--transition-smooth);
 }
 
-.start-menu {
+.app-list-menu {
     position: absolute;
     bottom: 90px;
     left: calc(50% - (clamp(400px, 90%, 1200px) / 2));
@@ -626,7 +626,7 @@ body.peek-mode .window.minimized.peek-focus {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
-.start-menu.active {
+.app-list-menu.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
@@ -645,7 +645,7 @@ body.peek-mode .window.minimized.peek-focus {
     }
 }
 
-.start-menu-content {
+.app-list-container {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -672,31 +672,31 @@ body.peek-mode .window.minimized.peek-focus {
     font-weight: bold;
 }
 
-.app-list {
+.app-list-content {
     flex: 1;
     padding: 10px;
     overflow-y: auto;
     min-height: 0;
 }
 
-.app-list::-webkit-scrollbar {
+.app-list-content::-webkit-scrollbar {
     width: 6px;
 }
 
-.app-list::-webkit-scrollbar-track {
+.app-list-content::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.app-list::-webkit-scrollbar-thumb {
+.app-list-content::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
 
-.app-list::-webkit-scrollbar-thumb:hover {
+.app-list-content::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color);
 }
 
-.start-app-item {
+.app-list-item {
     display: flex;
     align-items: center;
     padding: 10px 15px;
@@ -706,7 +706,7 @@ body.peek-mode .window.minimized.peek-focus {
     border-radius: 12px;
 }
 
-.start-app-item:hover {
+.app-list-item:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
@@ -722,7 +722,7 @@ body.peek-mode .window.minimized.peek-focus {
     transition: background 0.3s ease;
 }
 
-.start-menu-footer {
+.app-list-footer {
     padding: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
