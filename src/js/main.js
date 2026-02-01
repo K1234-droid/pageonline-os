@@ -1,6 +1,7 @@
-import { subscribe, state, setState } from './state.js';
+import { subscribe, state, setState, initStorage } from './state.js';
 import { initBoot } from './boot.js';
 import { initDesktop } from './desktop.js';
+import { initFullscreenDetector } from './FullscreenDetector.js';
 
 if (import.meta.env.DEV && 'serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -11,9 +12,12 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await initStorage();
+
     const bootUpdate = initBoot();
     const updateUI = initDesktop();
+    initFullscreenDetector();
 
     window.addEventListener('resize', () => {
         updateUI(state);
@@ -56,6 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (e.key === 'Escape') {
+            const activeElement = document.activeElement;
+            const isInput = activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable;
+
+            if (isInput) {
+                activeElement.blur();
+                return;
+            }
+
             if (state.powerStatus !== 'off') {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -85,7 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
+        const isInput = e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'TEXTAREA' ||
+            e.target.isContentEditable;
+
+        if (!isInput) {
+            e.preventDefault();
+        }
+
         if (state.startMenuOpen) {
             setState({ startMenuOpen: false });
         }
@@ -96,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bootUpdate(state);
         updateUI(state);
+        if (window._updateFullscreenDetectorUI) window._updateFullscreenDetectorUI(state);
     });
 
     document.documentElement.setAttribute('lang', state.language);

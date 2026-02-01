@@ -1,5 +1,6 @@
 import { state, setState, toggleLanguage, toggleAppList, addActiveApp, removeActiveApp, focusApp, togglePinDesktop, togglePinTaskbar } from './state.js';
 import { t } from './i18n.js';
+import { initSettings } from './settings.js';
 
 export function initDesktop() {
     let contextMenuOpen = false;
@@ -10,7 +11,6 @@ export function initDesktop() {
     const appListBtn = document.getElementById('app-list-btn');
     const appListMenu = document.getElementById('app-list-menu');
     const desktopIcons = document.getElementById('desktop-icons');
-    const langBtn = document.getElementById('lang-switch');
     const clock = document.getElementById('system-clock');
     const appContainer = document.getElementById('window-container');
     const appListContent = document.getElementById('app-list-content');
@@ -69,6 +69,11 @@ export function initDesktop() {
     });
     const tray = taskbar.querySelector('.taskbar-tray');
     if (tray) trayObserver.observe(tray);
+
+    const taskbarObserver = new ResizeObserver(() => {
+        requestAnimationFrame(() => renderTaskbarApps());
+    });
+    taskbarObserver.observe(taskbar);
 
     const apps = [
         { id: 'settings', icon: '⚙️', label: 'apps.settings' },
@@ -140,11 +145,6 @@ export function initDesktop() {
         toggleAppList();
     };
 
-    langBtn.onclick = (e) => {
-        e.stopPropagation();
-        toggleLanguage();
-    };
-
     if (window._desktopGlobalClick) document.removeEventListener('click', window._desktopGlobalClick);
     window._desktopGlobalClick = () => {
         if (state.appListOpen) setState({ appListOpen: false });
@@ -157,9 +157,16 @@ export function initDesktop() {
 
         if (e.target.closest('.context-menu')) return;
 
-        if (!e.target.closest('.window')) {
-            clearDesktopSelection();
+        if (e.target.closest('.window')) {
+            if (state.selectedDesktopApps && state.selectedDesktopApps.length > 0) {
+                setState({ selectedDesktopApps: [] });
+                keyboardFocusId = null;
+                selectionAnchor = null;
+            }
+            return;
         }
+
+        clearDesktopSelection();
     };
     document.addEventListener('mousedown', window._desktopGlobalMousedown);
 
@@ -295,11 +302,11 @@ export function initDesktop() {
                 }
             }
 
-            if (!state.focusedApp && currentSelection.length > 0) {
+            if (currentSelection.length > 0) {
                 setState({ selectedDesktopApps: [] });
                 keyboardFocusId = null;
                 selectionAnchor = null;
-                activateDesktop();
+                if (!state.focusedApp) activateDesktop();
             }
             return;
         }
@@ -461,6 +468,7 @@ export function initDesktop() {
     let resizeTimer;
     function reflowIcons() {
         if (state.powerStatus !== 'on') return;
+        if (!state.isFullscreenStable) return;
 
         const pinned = state.pinnedDesktopApps || [];
         if (pinned.length === 0) return;
@@ -501,15 +509,8 @@ export function initDesktop() {
         let x = 0;
         let y = 0;
 
-        if (valid.length > 0) {
-            const last = valid.reduce((prev, curr) => {
-                if (curr.x > prev.x) return curr;
-                if (curr.x === prev.x && curr.y > prev.y) return curr;
-                return prev;
-            });
-            x = last.x;
-            y = last.y + 1;
-        }
+        x = 0;
+        y = 0;
 
         invalid.forEach(p => {
             while (true) {
@@ -549,9 +550,15 @@ export function initDesktop() {
     };
 
     if (document.readyState === 'complete') {
-        setTimeout(initReflow, 300);
+        setTimeout(() => {
+            initReflow();
+            renderAppListItems();
+        }, 300);
     } else {
-        window.addEventListener('load', () => setTimeout(initReflow, 300));
+        window.addEventListener('load', () => setTimeout(() => {
+            initReflow();
+            renderAppListItems();
+        }, 300));
     }
 
     let dragLeaderId = null;
@@ -1008,18 +1015,46 @@ export function initDesktop() {
         activeWin._autoMinimized = [];
     }
 
-    function openApp(app, customContent = null) {
+    function openApp(app, customContent = null, extraOptions = {}) {
         clearDesktopSelection();
+
+        if (app.id === 'settings') {
+            const existing = state.activeApps.find(a => a.id === 'settings' && !a.isDialog);
+            if (existing) {
+                focusWindow(existing.instanceId);
+
+                if (extraOptions.navSection) {
+                    const win = document.getElementById(`win-${existing.instanceId}`);
+                    if (win && win._navigateTo) {
+                        win._navigateTo(extraOptions.navSection, extraOptions.navTarget);
+                    }
+                }
+                return;
+            }
+        }
+
         const instanceId = `${app.id}-${Date.now()}`;
         const appInstance = { ...app, instanceId };
         addActiveApp(appInstance);
-        createWindow(appInstance, customContent);
+
+        const options = { ...extraOptions };
+        if (app.id === 'settings') {
+            options.width = 750;
+            options.height = 400;
+            options.minWidth = 500;
+            options.minHeight = 250;
+            options.centered = true;
+        }
+
+        createWindow(appInstance, customContent, options);
     }
 
     function createWindow(appInstance, customContent = null, options = {}) {
         const {
             width = 500,
             height = 400,
+            minWidth: optMinWidth = 300,
+            minHeight: optMinHeight = 200,
             resizable = true,
             maximizable = true,
             centered = false,
@@ -1031,6 +1066,7 @@ export function initDesktop() {
         win.id = `win-${appInstance.instanceId}`;
 
         win._appId = appInstance.id;
+        win.setAttribute('data-app-id', appInstance.id);
         win._options = options;
         win._customContent = !!customContent;
 
@@ -1071,10 +1107,12 @@ export function initDesktop() {
 
         setTimeout(() => win.classList.remove('opening'), 10);
 
-        win.onmousedown = () => {
-            focusWindow(appInstance.instanceId);
+        win.addEventListener('mousedown', () => {
+            if (state.focusedApp !== appInstance.instanceId) {
+                focusWindow(appInstance.instanceId);
+            }
             if (state.appListOpen) setState({ appListOpen: false });
-        };
+        });
 
         win._isMaximized = false;
         win._originalRect = null;
@@ -1193,9 +1231,14 @@ export function initDesktop() {
                 const startX = e.clientX;
                 const startY = e.clientY;
 
+                const minWidth = optMinWidth;
+                const minHeight = optMinHeight;
+
                 const onMouseMove = (moveEvent) => {
-                    win.style.width = `${startWidth + (moveEvent.clientX - startX)}px`;
-                    win.style.height = `${startHeight + (moveEvent.clientY - startY)}px`;
+                    const newWidth = Math.max(minWidth, startWidth + (moveEvent.clientX - startX));
+                    const newHeight = Math.max(minHeight, startHeight + (moveEvent.clientY - startY));
+                    win.style.width = `${newWidth}px`;
+                    win.style.height = `${newHeight}px`;
                 };
 
                 const onMouseUp = () => {
@@ -1209,6 +1252,15 @@ export function initDesktop() {
         }
 
         appContainer.appendChild(win);
+
+        if (appInstance.id === 'settings' && !customContent) {
+            win._customContent = true;
+            initSettings(win);
+
+            if (options.navSection && win._navigateTo) {
+                win._navigateTo(options.navSection, options.navTarget);
+            }
+        }
 
         if (centered) {
             setTimeout(() => {
@@ -1346,6 +1398,11 @@ export function initDesktop() {
         }
     }
 
+    window.createOSWindow = createWindow;
+    window.focusOSWindow = focusWindow;
+    window.closeOSWindow = closeWindow;
+    window.openOSApp = openApp;
+
     function closeContextMenu() {
         const menu = document.getElementById('custom-context-menu');
         if (menu) {
@@ -1368,7 +1425,7 @@ export function initDesktop() {
         const tray = taskbar.querySelector('.taskbar-tray');
         const sideSpace = Math.max(startBtn.offsetWidth, tray.offsetWidth) + 30;
         const availableWidth = taskbar.offsetWidth - (sideSpace * 2);
-        const maxIcons = Math.max(1, Math.floor(availableWidth / 54));
+        let maxIcons = Math.max(1, Math.floor(availableWidth / 54));
 
         const pinnedIds = state.pinnedTaskbarApps || [];
         const activeGrouped = {};
@@ -1379,6 +1436,10 @@ export function initDesktop() {
 
         const activeIds = Object.keys(activeGrouped);
         const allAppIds = [...new Set([...pinnedIds, ...activeIds])];
+
+        if (allAppIds.length > maxIcons) {
+            maxIcons = Math.max(1, maxIcons - 1);
+        }
 
         const appsToRender = allAppIds.slice(0, maxIcons).map(id => {
             const appData = apps.find(a => a.id === id);
@@ -1628,11 +1689,26 @@ export function initDesktop() {
 
     const taskbarContainer = document.querySelector('.taskbar');
     taskbarContainer.oncontextmenu = (e) => {
-        if ((e.target.classList.contains('taskbar') || e.target.id === 'taskbar-apps') && state.activeApps.length > 0) {
+        if (e.target.classList.contains('taskbar') || e.target.id === 'taskbar-apps') {
             e.preventDefault();
             showContextMenu(e.clientX, e.clientY, null, 'taskbar-bg');
         }
     };
+
+    const desktopBg = document.querySelector('.desktop-container') || document.body;
+
+    desktopBg.addEventListener('contextmenu', (e) => {
+        const isApp = e.target.closest('.app-shortcut') ||
+            e.target.closest('.window') ||
+            e.target.closest('.taskbar') ||
+            e.target.closest('.context-menu');
+
+        if (!isApp) {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e.clientX, e.clientY, null, 'desktop-bg');
+        }
+    });
 
     function showOverflowMenu(x, y, appsList) {
         let menu = document.getElementById('overflow-menu');
@@ -1675,7 +1751,12 @@ export function initDesktop() {
                 e.stopPropagation();
                 if (itemData.instances.length === 1) {
                     const inst = itemData.instances[0];
-                    if (state.focusedApp === inst.instanceId) {
+                    const isRunning = state.activeApps.some(a => a.instanceId === inst.instanceId);
+
+                    if (!isRunning) {
+                        const appDef = apps.find(a => a.id === appId);
+                        if (appDef) openApp(appDef);
+                    } else if (state.focusedApp === inst.instanceId) {
                         minimizeWindow(inst.instanceId);
                     } else {
                         focusWindow(inst.instanceId);
@@ -1691,7 +1772,10 @@ export function initDesktop() {
             };
 
             el.onmouseenter = () => {
-                if (itemData.instances.length > 0) {
+                const realInstance = itemData.instances[0];
+                const isRunning = state.activeApps.some(a => a.instanceId === realInstance.instanceId);
+
+                if (isRunning) {
                     showGroupPreview(el, itemData.instances);
                 }
             };
@@ -1800,6 +1884,14 @@ export function initDesktop() {
             const thumbBody = menu.querySelector(`#thumb-body-${inst.instanceId}`);
             if (winContent && thumbBody) {
                 const clone = winContent.cloneNode(true);
+
+                clone.querySelectorAll('input, textarea, select, button, label').forEach(el => el.remove());
+
+                clone.removeAttribute('id');
+                clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                clone.querySelectorAll('[name]').forEach(el => el.removeAttribute('name'));
+                clone.querySelectorAll('[for]').forEach(el => el.removeAttribute('for'));
+
                 clone.style.width = winContent.offsetWidth + 'px';
                 clone.style.height = winContent.offsetHeight + 'px';
                 clone.style.overflow = 'hidden';
@@ -1807,6 +1899,14 @@ export function initDesktop() {
                 clone.style.transformOrigin = 'top left';
                 clone.style.pointerEvents = 'none';
                 clone.style.position = 'absolute';
+
+                clone.style.animation = 'none';
+                clone.style.transition = 'none';
+                clone.querySelectorAll('*').forEach(el => {
+                    el.style.animation = 'none';
+                    el.style.transition = 'none';
+                });
+
                 thumbBody.appendChild(clone);
             }
         });
@@ -1821,14 +1921,18 @@ export function initDesktop() {
         const isOverflow = targetEl.closest('#overflow-menu');
 
         if (isOverflow) {
-            left = rect.left - menuWidth - 2;
-
-            top = rect.bottom - menuHeight;
-
-            if (top + menuHeight > window.innerHeight) {
-                top = window.innerHeight - menuHeight - 10;
+            const overflowMenu = document.getElementById('overflow-menu');
+            if (overflowMenu) {
+                const ovRect = overflowMenu.getBoundingClientRect();
+                left = ovRect.left - menuWidth - 10;
+                top = rect.top - menuHeight;
+            } else {
+                left = rect.left - menuWidth - 10;
+                top = rect.bottom - menuHeight;
             }
+
             if (top < 10) top = 10;
+            if (left < 10) left = 10;
         } else {
             top = rect.top - menuHeight - 15;
             left = rect.left + (rect.width / 2) - (menuWidth / 2);
@@ -1957,8 +2061,22 @@ export function initDesktop() {
             document.body.appendChild(menu);
         }
 
-        if (source === 'taskbar-bg') {
-            const allMinimized = state.activeApps.length > 0 &&
+        if (source === 'desktop-bg') {
+            menu.innerHTML = `
+                <div class="menu-item" id="ctx-change-wallpaper">${t('controls.changeWallpaper', state.language)}</div>
+            `;
+
+            document.getElementById('ctx-change-wallpaper').onclick = () => {
+                const settingsApp = apps.find(a => a.id === 'settings');
+                if (settingsApp) {
+                    openApp(settingsApp, null, { navSection: 'appearance' });
+                }
+                menu.style.display = 'none';
+            };
+        }
+        else if (source === 'taskbar-bg') {
+            const hasApps = state.activeApps.length > 0;
+            const allMinimized = hasApps &&
                 state.activeApps.every(inst => {
                     const win = document.getElementById(`win-${inst.instanceId}`);
                     return win && win.classList.contains('minimized');
@@ -1966,22 +2084,38 @@ export function initDesktop() {
 
             const labelKey = allMinimized ? 'controls.showAllWindows' : 'controls.minimizeAllWindows';
 
-            menu.innerHTML = `
-                <div class="menu-item" id="min-all-btn">${t(labelKey, state.language)}</div>
-                <div class="menu-item" id="close-all-btn">${t('controls.closeAllWindows', state.language)}</div>
-            `;
-            document.getElementById('min-all-btn').onclick = () => {
-                if (allMinimized) {
-                    showAllWindows();
-                } else {
-                    minimizeAllWindows();
-                }
+            let menuHTML = `<div class="menu-item" id="open-settings-btn">${t('controls.openSettings', state.language)}</div>`;
+
+            if (hasApps) {
+                menuHTML += `
+                    <div class="menu-separator"></div>
+                    <div class="menu-item" id="min-all-btn">${t(labelKey, state.language)}</div>
+                    <div class="menu-item" id="close-all-btn">${t('controls.closeAllWindows', state.language)}</div>
+                `;
+            }
+
+            menu.innerHTML = menuHTML;
+
+            document.getElementById('open-settings-btn').onclick = () => {
+                const settingsApp = apps.find(a => a.id === 'settings');
+                if (settingsApp) openApp(settingsApp);
                 menu.style.display = 'none';
             };
-            document.getElementById('close-all-btn').onclick = () => {
-                closeAllWindows();
-                menu.style.display = 'none';
-            };
+
+            if (hasApps) {
+                document.getElementById('min-all-btn').onclick = () => {
+                    if (allMinimized) {
+                        showAllWindows();
+                    } else {
+                        minimizeAllWindows();
+                    }
+                    menu.style.display = 'none';
+                };
+                document.getElementById('close-all-btn').onclick = () => {
+                    closeAllWindows();
+                    menu.style.display = 'none';
+                };
+            }
         }
         else if (source === 'desktop' || source === 'start' || source === 'app-taskbar') {
             const app = (typeof data === 'string')
@@ -2171,7 +2305,12 @@ export function initDesktop() {
         const settingsApp = apps.find(a => a.id === 'settings');
         const instanceId = `confirm-${Date.now()}`;
 
-        const appInstance = { ...settingsApp, instanceId, label: 'controls.confirmDeleteTitle' };
+        const appInstance = {
+            ...settingsApp,
+            instanceId,
+            label: 'controls.confirmDeleteTitle',
+            isDialog: true
+        };
 
         const content = `
             <div class="confirm-dialog">
@@ -2193,6 +2332,7 @@ export function initDesktop() {
         });
 
         const win = document.getElementById(`win-${instanceId}`);
+        win.setAttribute('data-is-dialog', 'true');
         win._isConfirmDelete = true;
         win._dialogContext = contextData;
         win._dialogTargetAppId = contextData.targetId;
@@ -2236,21 +2376,111 @@ export function initDesktop() {
 
     function updateClock() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString(state.language === 'id' ? 'id-ID' : 'en-US', {
+        const lang = state.language === 'id' ? 'id-ID' : 'en-US';
+
+        const timeStr = now.toLocaleTimeString(lang, {
             hour: '2-digit',
-            minute: '2-digit'
-        });
-        clock.innerText = timeStr;
+            minute: '2-digit',
+            hour12: state.clockFormat === '12h'
+        }).replace(/\./g, ':');
+
+        if (state.dateDisplay === 'time-only') {
+            clock.innerHTML = `<div class="clock-time">${timeStr}</div>`;
+            return;
+        }
+
+        const day = now.getDate().toString().padStart(2, '0');
+        const monthNum = (now.getMonth() + 1).toString().padStart(2, '0');
+        const year = now.getFullYear();
+
+        let dateStr = '';
+        switch (state.dateDisplay) {
+            case 'dmy':
+                dateStr = `${day}/${monthNum}/${year}`;
+                break;
+            case 'mdy':
+                dateStr = `${monthNum}/${day}/${year}`;
+                break;
+            case 'ymd':
+                dateStr = `${year}/${monthNum}/${day}`;
+                break;
+        }
+
+        clock.innerHTML = `
+            <div class="clock-time">${timeStr}</div>
+            <div class="clock-date">${dateStr}</div>
+        `;
     }
 
     const clockInterval = setInterval(updateClock, 1000);
     updateClock();
+
+    clock.oncontextmenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        let menu = document.getElementById('custom-context-menu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = 'custom-context-menu';
+            menu.className = 'context-menu glass';
+            document.body.appendChild(menu);
+        }
+
+        menu.innerHTML = `
+            <div class="menu-item" id="ctx-change-clock">${t('controls.changeClock', state.language)}</div>
+        `;
+
+        menu.style.display = 'block';
+
+        const menuWidth = 250;
+        const menuHeight = menu.offsetHeight || 40;
+        let left = e.clientX - menuWidth;
+        let top = e.clientY - menuHeight - 10;
+
+        if (left < 0) left = 10;
+        if (top < 0) top = 10;
+
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+
+        document.getElementById('ctx-change-clock').onclick = () => {
+            const settingsApp = apps.find(a => a.id === 'settings');
+            if (settingsApp) {
+                openApp(settingsApp, null, {
+                    navSection: 'general',
+                    navTarget: '.radio-item[data-clock="12h"]'
+                });
+            }
+            menu.style.display = 'none';
+        };
+
+        const closeCMenu = (e) => {
+            if (e.target.closest('#custom-context-menu')) return;
+            menu.style.display = 'none';
+            document.removeEventListener('mousedown', closeCMenu);
+        };
+        setTimeout(() => document.addEventListener('mousedown', closeCMenu), 10);
+    };
+
+    const wallpaper = document.querySelector('.desktop-wallpaper');
+    if (wallpaper && state.desktopWallpaper) {
+        wallpaper.style.background = state.desktopWallpaper;
+        wallpaper.style.backgroundSize = 'cover';
+    }
 
     window._destroyDesktop = () => {
         clearInterval(clockInterval);
     };
 
     let lastPowerStatus = state.powerStatus;
+    let lastLanguage = state.language;
+    let lastActiveAppsJson = JSON.stringify(state.activeApps.map(a => a.instanceId));
+    let lastPinnedTaskbarAppsJson = JSON.stringify(state.pinnedTaskbarApps);
+    let lastPinnedDesktopAppsJson = JSON.stringify(state.pinnedDesktopApps);
+    let lastSelectedDesktopAppsJson = JSON.stringify(state.selectedDesktopApps);
+    let lastKeyboardFocusId = keyboardFocusId;
+    let lastFocusedApp = state.focusedApp;
 
     return function updateUI(s) {
         if (s.powerStatus === 'on' && lastPowerStatus !== 'on') {
@@ -2271,11 +2501,99 @@ export function initDesktop() {
 
         closeOSContextMenu();
 
-        langBtn.innerText = s.language.toUpperCase();
-        renderIcons();
-        renderAppListItems();
-        renderTaskbarApps();
-        updateClock();
+        const desktopWp = document.querySelector('.desktop-wallpaper');
+        if (desktopWp) {
+            if (s.desktopWallpaper) {
+                desktopWp.style.background = s.desktopWallpaper;
+                desktopWp.style.backgroundSize = 'cover';
+                desktopWp.style.backgroundPosition = 'center';
+                desktopWp.style.backgroundRepeat = 'no-repeat';
+            } else {
+                desktopWp.style.background = '';
+                desktopWp.style.backgroundSize = '';
+                desktopWp.style.backgroundPosition = '';
+                desktopWp.style.backgroundRepeat = '';
+            }
+        }
+
+        const menuProfile = appListMenu.querySelector('.user-profile');
+        if (menuProfile) {
+            const avatar = menuProfile.querySelector('.avatar');
+            const username = menuProfile.querySelector('.username');
+            const editBtnText = menuProfile.querySelector('#edit-profile-text');
+
+            if (username) username.innerText = s.username;
+            if (editBtnText) editBtnText.innerText = t('controls.editProfile', s.language);
+
+            if (avatar) {
+                if (s.profilePicture) {
+                    avatar.innerHTML = `<img src="${s.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                } else {
+                    avatar.innerText = s.username.charAt(0).toUpperCase();
+                }
+            }
+
+            const editProfileBtn = menuProfile.querySelector('#edit-profile-btn');
+            if (editProfileBtn && !editProfileBtn._hasHandler) {
+                editProfileBtn._hasHandler = true;
+                editProfileBtn.onclick = () => {
+                    const settingsApp = apps.find(a => a.id === 'settings');
+                    if (settingsApp) {
+                        openApp(settingsApp, null, { navSection: 'profile' });
+                    }
+                    setState({ appListOpen: false });
+                };
+            }
+        }
+
+        let needsFullRender = false;
+        if (s.language !== lastLanguage) {
+            needsFullRender = true;
+            lastLanguage = s.language;
+        }
+
+        const currentActiveAppsJson = JSON.stringify(s.activeApps.map(a => a.instanceId));
+        const currentPinnedTaskbarAppsJson = JSON.stringify(s.pinnedTaskbarApps);
+        const currentPinnedDesktopAppsJson = JSON.stringify(s.pinnedDesktopApps);
+        const currentSelectedDesktopAppsJson = JSON.stringify(s.selectedDesktopApps);
+        const currentKeyboardFocusId = keyboardFocusId;
+        const currentFocusedApp = s.focusedApp;
+
+        let needsTaskbarRender = needsFullRender;
+        if (!needsTaskbarRender) {
+            if (currentActiveAppsJson !== lastActiveAppsJson ||
+                currentPinnedTaskbarAppsJson !== lastPinnedTaskbarAppsJson ||
+                currentFocusedApp !== lastFocusedApp) {
+                needsTaskbarRender = true;
+            }
+        }
+
+        let needsIconRender = needsFullRender;
+        if (!needsIconRender) {
+            if (currentPinnedDesktopAppsJson !== lastPinnedDesktopAppsJson ||
+                currentSelectedDesktopAppsJson !== lastSelectedDesktopAppsJson ||
+                currentKeyboardFocusId !== lastKeyboardFocusId) {
+                needsIconRender = true;
+            }
+        }
+
+        lastActiveAppsJson = currentActiveAppsJson;
+        lastPinnedTaskbarAppsJson = currentPinnedTaskbarAppsJson;
+        lastPinnedDesktopAppsJson = currentPinnedDesktopAppsJson;
+        lastSelectedDesktopAppsJson = currentSelectedDesktopAppsJson;
+        lastKeyboardFocusId = currentKeyboardFocusId;
+        lastFocusedApp = currentFocusedApp;
+
+        if (needsFullRender) {
+            renderIcons();
+            renderAppListItems();
+            renderTaskbarApps();
+        } else {
+            if (needsIconRender) renderIcons();
+            if (needsTaskbarRender) renderTaskbarApps();
+            updateClock();
+        }
+
         updateTaskbarAutohide();
 
         s.activeApps.forEach(app => {
@@ -2286,6 +2604,10 @@ export function initDesktop() {
 
             const titleEl = win.querySelector('.window-title');
             if (titleEl) titleEl.innerText = t(app.label, s.language);
+
+            if (win._updateSettingsUI) {
+                win._updateSettingsUI(s);
+            }
 
             if (!win._customContent) {
                 const contentEl = win.querySelector('.window-content p');

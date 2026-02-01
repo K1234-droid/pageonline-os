@@ -20,7 +20,6 @@ export function initBoot() {
                     });
                 }
             }).catch(err => {
-                // Ignore fullscreen errors if already fullscreen or user denied
                 console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
             });
         }
@@ -47,8 +46,17 @@ export function initBoot() {
 
         const welcomeScreen = document.getElementById('welcome-screen');
         const welcomeText = document.getElementById('welcome-user-text');
+        const welcomeAvatar = welcomeScreen.querySelector('.welcome-avatar');
+
         if (welcomeText) {
-            welcomeText.innerText = t('welcomeUser', state.language).replace('{name}', 'User');
+            welcomeText.innerText = t('welcomeUser', state.language).replace('{name}', state.username);
+        }
+        if (welcomeAvatar) {
+            if (state.profilePicture) {
+                welcomeAvatar.innerHTML = `<img src="${state.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                welcomeAvatar.innerText = state.username.charAt(0).toUpperCase();
+            }
         }
 
         welcomeScreen.classList.add('active');
@@ -74,14 +82,39 @@ export function initBoot() {
         powerText.innerText = t('powerText', s.language);
 
         const welcomeText = document.getElementById('welcome-user-text');
+        const welcomeAvatar = document.querySelector('#welcome-screen .welcome-avatar');
         if (welcomeText) {
-            welcomeText.innerText = t('welcomeUser', s.language).replace('{name}', 'User');
+            welcomeText.innerText = t('welcomeUser', s.language).replace('{name}', s.username);
+        }
+        if (welcomeAvatar) {
+            if (s.profilePicture) {
+                welcomeAvatar.innerHTML = `<img src="${s.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                welcomeAvatar.innerText = s.username.charAt(0).toUpperCase();
+            }
         }
 
         const shutdownText = document.getElementById('shutdown-user-text');
         if (shutdownText) {
             shutdownText.innerText = t('shuttingDown', s.language);
         }
+
+        const screens = [document.getElementById('welcome-screen'), document.getElementById('shutdown-screen')];
+        screens.forEach(screen => {
+            if (screen) {
+                if (s.desktopWallpaper) {
+                    screen.style.background = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), ${s.desktopWallpaper}`;
+                    screen.style.backgroundSize = 'cover';
+                    screen.style.backgroundPosition = 'center';
+                    screen.style.backgroundRepeat = 'no-repeat';
+                } else {
+                    screen.style.background = '';
+                    screen.style.backgroundSize = '';
+                    screen.style.backgroundPosition = '';
+                    screen.style.backgroundRepeat = '';
+                }
+            }
+        });
     };
 }
 

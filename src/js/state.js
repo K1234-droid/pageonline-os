@@ -1,22 +1,46 @@
-const STORAGE_KEY = 'pageonline_os_state';
+const DB_NAME = 'pageonline_os_db';
+const STORE_NAME = 'settings';
+const STORAGE_KEY = 'state';
 
-function loadPersistentState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {
-    console.error('State load error', e);
-  }
-  return {};
+let db = null;
+
+async function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      resolve(db);
+    };
+    request.onerror = (e) => reject(e.target.error);
+  });
 }
 
-const persistent = loadPersistentState();
+async function saveToDB(data) {
+  if (!db) await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(data, STORAGE_KEY);
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
 
-function getInitialLanguage() {
-  if (persistent.language) return persistent.language;
-
-  const navLang = navigator.language || 'en';
-  return navLang.startsWith('id') ? 'id' : 'en';
+async function loadFromDB() {
+  if (!db) await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(STORAGE_KEY);
+    request.onsuccess = () => resolve(request.result || {});
+    request.onerror = (e) => reject(e.target.error);
+  });
 }
 
 const initialDesktopApps = [
@@ -29,36 +53,68 @@ const initialDesktopApps = [
 
 export const state = {
   powerStatus: 'off',
-  language: getInitialLanguage(),
+  language: 'en',
   activeApps: [],
   focusedApp: null,
   time: new Date(),
   startMenuOpen: false,
-  startMenuOpen: false,
-  pinnedDesktopApps: persistent.savedDesktopApps || initialDesktopApps,
-  savedDesktopApps: persistent.savedDesktopApps || initialDesktopApps,
-  pinnedTaskbarApps: persistent.pinnedTaskbarApps || ['browser', 'notepad', 'files'],
+  username: 'User',
+  profilePicture: null,
+  desktopWallpaper: null,
+  pinnedDesktopApps: initialDesktopApps,
+  savedDesktopApps: initialDesktopApps,
+  pinnedTaskbarApps: ['browser', 'notepad', 'files'],
   selectedDesktopApps: [],
+  clockFormat: '24h',
+  dateDisplay: 'time-only',
+  isFullscreenStable: true,
 };
-
-if (state.pinnedDesktopApps.length > 0 && typeof state.pinnedDesktopApps[0] === 'string') {
-  const migrated = state.pinnedDesktopApps.map((id, index) => ({
-    id,
-    x: index % 10,
-    y: Math.floor(index / 10)
-  }));
-  state.pinnedDesktopApps = migrated;
-  state.savedDesktopApps = migrated;
-}
 
 const listeners = [];
 
 export function subscribe(callback) {
   listeners.push(callback);
+  return () => {
+    const index = listeners.indexOf(callback);
+    if (index > -1) listeners.splice(index, 1);
+  };
 }
 
 export function notify() {
   listeners.forEach(callback => callback(state));
+}
+
+export async function initStorage() {
+  const persistent = await loadFromDB();
+
+  if (persistent.language) state.language = persistent.language;
+  else {
+    const navLang = navigator.language || 'en';
+    state.language = navLang.startsWith('id') ? 'id' : 'en';
+  }
+
+  if (persistent.username) state.username = persistent.username;
+  if (persistent.profilePicture) state.profilePicture = persistent.profilePicture;
+  if (persistent.desktopWallpaper) state.desktopWallpaper = persistent.desktopWallpaper;
+  if (persistent.savedDesktopApps) {
+    state.pinnedDesktopApps = persistent.savedDesktopApps;
+    state.savedDesktopApps = persistent.savedDesktopApps;
+  }
+  if (persistent.pinnedTaskbarApps) state.pinnedTaskbarApps = persistent.pinnedTaskbarApps;
+  if (persistent.clockFormat) state.clockFormat = persistent.clockFormat;
+  if (persistent.dateDisplay) state.dateDisplay = persistent.dateDisplay;
+
+  if (state.pinnedDesktopApps.length > 0 && typeof state.pinnedDesktopApps[0] === 'string') {
+    const migrated = state.pinnedDesktopApps.map((id, index) => ({
+      id,
+      x: index % 10,
+      y: Math.floor(index / 10)
+    }));
+    state.pinnedDesktopApps = migrated;
+    state.savedDesktopApps = migrated;
+  }
+
+  notify();
 }
 
 export function setState(newState) {
@@ -67,10 +123,15 @@ export function setState(newState) {
   const toSave = {
     language: state.language,
     savedDesktopApps: state.savedDesktopApps,
-    pinnedTaskbarApps: state.pinnedTaskbarApps
+    pinnedTaskbarApps: state.pinnedTaskbarApps,
+    username: state.username,
+    profilePicture: state.profilePicture,
+    desktopWallpaper: state.desktopWallpaper,
+    clockFormat: state.clockFormat,
+    dateDisplay: state.dateDisplay
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 
+  saveToDB(toSave).catch(err => console.error('Storage save error', err));
   notify();
 }
 

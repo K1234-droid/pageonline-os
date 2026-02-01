@@ -4,6 +4,7 @@ const translations = {
         bootStatus: 'Sistem sedang memuat...',
         shutdown: 'Matikan',
         shuttingDown: 'Mematikan Daya...',
+        fullscreenReturn: 'Klik di Mana Saja untuk Kembali ke Tampilan Penuh',
         welcome: 'Selamat datang di PageOnline OS',
         welcomeUser: 'Selamat Datang, {name}',
         apps: {
@@ -30,20 +31,80 @@ const translations = {
             openSelected: 'Buka Aplikasi Terpilih',
             deleteSelected: 'Hapus',
             confirmDeleteMultipleTitle: 'Konfirmasi Hapus Banyak',
-            confirmDeleteMultipleMsg: 'Apakah Anda yakin ingin menghapus {count} pintasan?'
+            confirmDeleteMultipleMsg: 'Apakah Anda yakin ingin menghapus {count} pintasan?',
+            openSettings: 'Buka Pengaturan',
+            changeClock: 'Ubah Tampilan Waktu dan Tanggal',
+            changeWallpaper: 'Ubah Wallpaper',
+            editProfile: 'Ubah'
         },
         bootMessages: [
             'Memuat kernel...',
             'Menginisialisasi driver...',
             'Menyiapkan desktop...',
             'Mulai sistem...'
-        ]
+        ],
+        settings: {
+            title: 'Pengaturan',
+            searchPlaceholder: 'Cari pengaturan...',
+            noResults: 'Tidak ditemukan hasil',
+            menu: {
+                home: 'Beranda',
+                profile: 'Profil',
+                general: 'Umum',
+                appearance: 'Tampilan',
+                about: 'Tentang'
+            },
+            home: {
+                welcome: 'Halo, {name}',
+                subtitle: 'Kelola preferensi sistem Anda di sini.',
+                quickActions: 'Tautan Cepat'
+            },
+            profile: {
+                sectionTitle: 'Profil Pengguna',
+                editAvatar: 'Ubah Foto',
+                username: 'Nama Pengguna',
+                save: 'Simpan Perubahan',
+                cropper: {
+                    title: 'Potong Foto Profil',
+                    zoom: 'Perbesar',
+                    save: 'Simpan',
+                    cancel: 'Batal'
+                }
+            },
+            general: {
+                sectionTitle: 'Pengaturan Umum',
+                language: 'Bahasa Sistem',
+                langId: 'Bahasa Indonesia',
+                langEn: 'English',
+                clockFormat: 'Format Waktu',
+                time12: '12 Jam (00:00 PM)',
+                time24: '24 Jam (00:00)',
+                dateDisplay: 'Tampilan Waktu & Tanggal',
+                timeOnly: 'Hanya Jam',
+                timeDMY: 'Jam & Tanggal (DD/MM/YYYY)',
+                timeMDY: 'Jam & Tanggal (MM/DD/YYYY)',
+                timeYMD: 'Jam & Tanggal (YYYY/MM/DD)'
+            },
+            appearance: {
+                sectionTitle: 'Personalisasi',
+                wallpaper: 'Wallpaper Desktop',
+                upload: 'Unggah Gambar',
+                default: 'Gunakan Default'
+            },
+            about: {
+                sectionTitle: 'Tentang Website',
+                description: 'PageOnline OS adalah simulasi sistem operasi berbasis web dengan desain yang modern.',
+                version: 'Versi',
+                update: 'Kunjungi GitHub'
+            }
+        }
     },
     en: {
         powerText: 'Click to Start',
         bootStatus: 'System is loading...',
         shutdown: 'Shutdown',
         shuttingDown: 'Shutting Down...',
+        fullscreenReturn: 'Click Anywhere to Return to Full View',
         welcome: 'Welcome to PageOnline OS',
         welcomeUser: 'Welcome, {name}',
         apps: {
@@ -70,14 +131,73 @@ const translations = {
             openSelected: 'Open Selected Apps',
             deleteSelected: 'Delete',
             confirmDeleteMultipleTitle: 'Confirm Delete Multiple',
-            confirmDeleteMultipleMsg: 'Are you sure you want to remove {count} shortcuts?'
+            confirmDeleteMultipleMsg: 'Are you sure you want to remove {count} shortcuts?',
+            openSettings: 'Open Settings',
+            changeClock: 'Change the Time and Date Display',
+            changeWallpaper: 'Change Wallpaper',
+            editProfile: 'Edit'
         },
         bootMessages: [
             'Loading kernel...',
             'Initializing drivers...',
             'Preparing desktop...',
             'Starting system...'
-        ]
+        ],
+        settings: {
+            title: 'Settings',
+            searchPlaceholder: 'Search settings...',
+            noResults: 'No results found',
+            menu: {
+                home: 'Home',
+                profile: 'Profile',
+                general: 'General',
+                appearance: 'Appearance',
+                about: 'About'
+            },
+            home: {
+                welcome: 'Hello, {name}',
+                subtitle: 'Manage your system preferences here.',
+                quickActions: 'Quick Links'
+            },
+            profile: {
+                sectionTitle: 'User Profile',
+                editAvatar: 'Change Photo',
+                username: 'Username',
+                save: 'Save Changes',
+                cropper: {
+                    title: 'Crop Profile Picture',
+                    zoom: 'Zoom',
+                    save: 'Save',
+                    cancel: 'Cancel'
+                }
+            },
+            general: {
+                sectionTitle: 'General Settings',
+                language: 'System Language',
+                langId: 'Bahasa Indonesia',
+                langEn: 'English',
+                clockFormat: 'Time Format',
+                time12: '12-Hour (00:00 PM)',
+                time24: '24-Hour (00:00)',
+                dateDisplay: 'Date & Time Display',
+                timeOnly: 'Time Only',
+                timeDMY: 'Time & Date (DD/MM/YYYY)',
+                timeMDY: 'Time & Date (MM/DD/YYYY)',
+                timeYMD: 'Time & Date (YYYY/MM/DD)'
+            },
+            appearance: {
+                sectionTitle: 'Personalization',
+                wallpaper: 'Desktop Wallpaper',
+                upload: 'Upload Image',
+                default: 'Use Default'
+            },
+            about: {
+                sectionTitle: 'About Website',
+                description: 'PageOnline OS is a web-based operating system simulation with a modern design.',
+                version: 'Version',
+                update: 'Visit GitHub'
+            }
+        }
     }
 };
 
