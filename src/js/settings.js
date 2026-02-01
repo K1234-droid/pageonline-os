@@ -15,6 +15,7 @@ export function initSettings(win) {
         profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
         general: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>',
         appearance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+        system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
         about: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
         search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
         close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
@@ -27,6 +28,7 @@ export function initSettings(win) {
         { id: 'clock', label: 'settings.general.clockFormat', section: 'general', selector: '.settings-group:nth-of-type(2)', icon: icons.general },
         { id: 'date', label: 'settings.general.dateDisplay', section: 'general', selector: '.settings-group:nth-of-type(3)', icon: icons.general },
         { id: 'wallpaper', label: 'settings.appearance.wallpaper', section: 'appearance', selector: '.wallpaper-preview-container', icon: icons.appearance },
+        { id: 'fullscreen', label: 'settings.system.fullscreen.label', section: 'system', selector: '.switch-container', icon: icons.system },
         { id: 'about', label: 'settings.about.sectionTitle', section: 'about', selector: '.about-content', icon: icons.about }
     ];
 
@@ -60,9 +62,12 @@ export function initSettings(win) {
 
     function render(skipAnimation = false) {
         const settingsContent = content.querySelector('.settings-content');
+        const settingsSidebar = content.querySelector('.settings-sidebar');
 
         const shouldPreserveScroll = settingsContent && activeSection === renderedSection;
         const scrollTop = shouldPreserveScroll ? settingsContent.scrollTop : 0;
+        const sidebarScrollTop = settingsSidebar ? settingsSidebar.scrollTop : 0;
+        const sidebarScrollLeft = settingsSidebar ? settingsSidebar.scrollLeft : 0;
 
         content.innerHTML = `
             <div class="settings-layout">
@@ -72,6 +77,7 @@ export function initSettings(win) {
                         ${renderSidebarItem('profile', t('settings.menu.profile', state.language), icons.profile)}
                         ${renderSidebarItem('general', t('settings.menu.general', state.language), icons.general)}
                         ${renderSidebarItem('appearance', t('settings.menu.appearance', state.language), icons.appearance)}
+                        ${renderSidebarItem('system', t('settings.menu.system', state.language), icons.system)}
                         ${renderSidebarItem('about', t('settings.menu.about', state.language), icons.about)}
                     </div>
                 </div>
@@ -83,8 +89,13 @@ export function initSettings(win) {
         setupEvents();
 
         const newSettingsContent = content.querySelector('.settings-content');
+        const newSettingsSidebar = content.querySelector('.settings-sidebar');
         if (newSettingsContent) {
             newSettingsContent.scrollTop = scrollTop;
+        }
+        if (newSettingsSidebar) {
+            newSettingsSidebar.scrollTop = sidebarScrollTop;
+            newSettingsSidebar.scrollLeft = sidebarScrollLeft;
         }
 
         renderedSection = activeSection;
@@ -129,6 +140,10 @@ export function initSettings(win) {
                             <div class="grid-item" data-section="general">
                                 <span class="grid-icon">${icons.general}</span>
                                 <span class="grid-label">${t('settings.menu.general', state.language)}</span>
+                            </div>
+                            <div class="grid-item" data-section="system">
+                                <span class="grid-icon">${icons.system}</span>
+                                <span class="grid-label">${t('settings.menu.system', state.language)}</span>
                             </div>
                         </div>
                     </div>
@@ -228,6 +243,24 @@ export function initSettings(win) {
                                     <label for="wallpaper-input" class="sr-only">${t('settings.appearance.upload', state.language)}</label>
                                     <input type="file" id="wallpaper-input" name="wallpaper_file_${Math.random().toString(36).substring(7)}" style="display:none" accept="image/*" autocomplete="off">
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            case 'system':
+                return `
+                    <div class="settings-section ${animClass}">
+                        <h2 class="section-title">${t('settings.system.sectionTitle', state.language)}</h2>
+                        <div class="settings-group">
+                            <div class="switch-item">
+                                <div class="switch-content">
+                                    <span class="switch-label">${t('settings.system.fullscreen.label', state.language)}</span>
+                                    <span class="switch-description">${t('settings.system.fullscreen.description', state.language)}</span>
+                                </div>
+                                <label class="switch-container">
+                                    <input type="checkbox" id="fullscreen-toggle" ${state.alwaysShowFullscreen ? 'checked' : ''}>
+                                    <span class="switch-slider"></span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -554,6 +587,27 @@ export function initSettings(win) {
                 render(true);
             };
         }
+
+        const switchItem = content.querySelector('.switch-item');
+        const fullscreenToggle = content.querySelector('#fullscreen-toggle');
+        if (switchItem && fullscreenToggle) {
+            switchItem.onclick = (e) => {
+                if (e.target !== fullscreenToggle) {
+                    fullscreenToggle.click();
+                }
+            };
+
+            fullscreenToggle.onclick = (e) => e.stopPropagation();
+
+            fullscreenToggle.onchange = (e) => {
+                const isChecked = e.target.checked;
+                setState({ alwaysShowFullscreen: isChecked });
+
+                if (!isChecked && document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => console.warn(err));
+                }
+            };
+        }
     }
 
     let lastLanguage = state.language;
@@ -562,6 +616,7 @@ export function initSettings(win) {
     let lastDateImg = state.dateDisplay;
     let lastPfp = state.profilePicture;
     let lastWall = state.desktopWallpaper;
+    let lastFullscreen = state.alwaysShowFullscreen;
 
     win._updateSettingsUI = (s) => {
         const cropper = state.activeApps.find(a => a.id === 'settings' && a._isCropper);
@@ -577,7 +632,8 @@ export function initSettings(win) {
             s.clockFormat !== lastClock ||
             s.dateDisplay !== lastDateImg ||
             s.profilePicture !== lastPfp ||
-            s.desktopWallpaper !== lastWall) {
+            s.desktopWallpaper !== lastWall ||
+            s.alwaysShowFullscreen !== lastFullscreen) {
 
             lastLanguage = s.language;
             lastUsername = s.username;
@@ -585,6 +641,7 @@ export function initSettings(win) {
             lastDateImg = s.dateDisplay;
             lastPfp = s.profilePicture;
             lastWall = s.desktopWallpaper;
+            lastFullscreen = s.alwaysShowFullscreen;
 
             render(true);
         }

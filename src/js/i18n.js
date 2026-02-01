@@ -52,6 +52,7 @@ const translations = {
                 profile: 'Profil',
                 general: 'Umum',
                 appearance: 'Tampilan',
+                system: 'Sistem',
                 about: 'Tentang'
             },
             home: {
@@ -96,6 +97,13 @@ const translations = {
                 description: 'PageOnline OS adalah simulasi sistem operasi berbasis web dengan desain yang modern.',
                 version: 'Versi',
                 update: 'Kunjungi GitHub'
+            },
+            system: {
+                sectionTitle: 'Sistem',
+                fullscreen: {
+                    label: 'Selalu Tampilkan Layar Penuh',
+                    description: 'Jika fitur ini dinonaktifkan, website akan menyesuaikan tampilannya sesuai dengan ukuran jendela browser.'
+                }
             }
         }
     },
@@ -152,6 +160,7 @@ const translations = {
                 profile: 'Profile',
                 general: 'General',
                 appearance: 'Appearance',
+                system: 'System',
                 about: 'About'
             },
             home: {
@@ -196,6 +205,13 @@ const translations = {
                 description: 'PageOnline OS is a web-based operating system simulation with a modern design.',
                 version: 'Version',
                 update: 'Visit GitHub'
+            },
+            system: {
+                sectionTitle: 'System',
+                fullscreen: {
+                    label: 'Always Show Full Screen',
+                    description: 'If this feature is disabled, the website will adjust it\'s appearance according to the size of the browser window.'
+                }
             }
         }
     }

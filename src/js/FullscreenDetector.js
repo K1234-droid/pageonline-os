@@ -36,9 +36,12 @@ export function initFullscreenDetector() {
 
     function updateOverlay() {
         const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        const shouldShowOverlay = state.alwaysShowFullscreen && !isFullscreen && state.powerStatus === 'on';
 
-        if (!isFullscreen && state.powerStatus === 'on') {
-            setState({ isFullscreenStable: false });
+        if (shouldShowOverlay) {
+            if (state.isFullscreenStable !== false) {
+                setState({ isFullscreenStable: false });
+            }
             detectorText.innerText = t('fullscreenReturn', state.language);
             overlay.style.display = 'flex';
             setTimeout(() => {
@@ -46,12 +49,10 @@ export function initFullscreenDetector() {
             }, 10);
         } else {
             overlay.style.opacity = '0';
-            setTimeout(() => {
-                if (document.fullscreenElement) {
-                    overlay.style.display = 'none';
-                    setState({ isFullscreenStable: true });
-                }
-            }, 600);
+            overlay.style.display = 'none';
+            if (state.isFullscreenStable !== true) {
+                setState({ isFullscreenStable: true });
+            }
         }
     }
 
@@ -78,5 +79,6 @@ export function initFullscreenDetector() {
         if (detectorText) {
             detectorText.innerText = t('fullscreenReturn', s.language);
         }
+        updateOverlay();
     };
 }

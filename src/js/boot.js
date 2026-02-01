@@ -11,7 +11,7 @@ export function initBoot() {
     powerBtn.addEventListener('click', () => {
         if (state.powerStatus !== 'off') return;
 
-        if (document.documentElement.requestFullscreen) {
+        if (state.alwaysShowFullscreen && document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().then(() => {
                 if (navigator.keyboard && navigator.keyboard.lock) {
                     navigator.keyboard.lock(['Escape']).catch(err => {
@@ -63,6 +63,7 @@ export function initBoot() {
 
         await new Promise(r => setTimeout(r, 3000));
 
+        setState({ powerStatus: 'on' });
         desktopScreen.classList.add('active');
 
         welcomeScreen.style.pointerEvents = 'none';
@@ -71,8 +72,6 @@ export function initBoot() {
         welcomeScreen.classList.remove('active');
         welcomeScreen.style.opacity = '';
         welcomeScreen.style.pointerEvents = '';
-
-        setState({ powerStatus: 'on' });
     }
 
     function completeBoot() {

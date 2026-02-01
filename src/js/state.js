@@ -68,6 +68,7 @@ export const state = {
   clockFormat: '24h',
   dateDisplay: 'time-only',
   isFullscreenStable: true,
+  alwaysShowFullscreen: true,
 };
 
 const listeners = [];
@@ -103,6 +104,7 @@ export async function initStorage() {
   if (persistent.pinnedTaskbarApps) state.pinnedTaskbarApps = persistent.pinnedTaskbarApps;
   if (persistent.clockFormat) state.clockFormat = persistent.clockFormat;
   if (persistent.dateDisplay) state.dateDisplay = persistent.dateDisplay;
+  if (persistent.alwaysShowFullscreen !== undefined) state.alwaysShowFullscreen = persistent.alwaysShowFullscreen;
 
   if (state.pinnedDesktopApps.length > 0 && typeof state.pinnedDesktopApps[0] === 'string') {
     const migrated = state.pinnedDesktopApps.map((id, index) => ({
@@ -128,7 +130,8 @@ export function setState(newState) {
     profilePicture: state.profilePicture,
     desktopWallpaper: state.desktopWallpaper,
     clockFormat: state.clockFormat,
-    dateDisplay: state.dateDisplay
+    dateDisplay: state.dateDisplay,
+    alwaysShowFullscreen: state.alwaysShowFullscreen
   };
 
   saveToDB(toSave).catch(err => console.error('Storage save error', err));
