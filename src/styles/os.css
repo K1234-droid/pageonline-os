@@ -1540,7 +1540,8 @@ body.peek-mode .window.minimized.peek-focus {
     box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.1);
 }
 
-.settings-radio-group {
+.settings-radio-group,
+.settings-switch-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -1899,4 +1900,32 @@ input:focus+.switch-slider {
 
 input:checked+.switch-slider:before {
     transform: translateX(20px);
+}
+
+body.animations-disabled *:not(.screen):not(.loading-spinner):not(.power-container):not(.power-btn):not(.power-icon):not(.logo-text),
+body.animations-disabled *:not(.screen):not(.loading-spinner):not(.power-container):not(.power-btn):not(.power-icon):not(.logo-text)::before,
+body.animations-disabled *:not(.screen):not(.loading-spinner):not(.power-container):not(.power-btn):not(.power-icon):not(.logo-text)::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+body.blur-disabled *,
+body.blur-disabled *::before,
+body.blur-disabled *::after {
+    backdrop-filter: none !important;
+}
+
+body.blur-disabled .taskbar,
+body.blur-disabled .app-list-menu,
+body.blur-disabled .context-menu,
+body.blur-disabled .app-tooltip,
+body.blur-disabled .settings-search-results {
+    background: #0F0F14 !important;
+}
+
+body.blur-disabled .window.focused,
+body.blur-disabled .window:not(.focused),
+body.blur-disabled .window:not(.focused) .window-header,
+body.blur-disabled .window:not(.focused) .settings-sidebar {
+    background: #0F0F14 !important;
 }

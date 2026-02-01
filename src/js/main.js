@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUI(state);
     });
 
+    subscribe((state) => {
+        document.body.classList.toggle('animations-disabled', !state.enableAnimations);
+        document.body.classList.toggle('blur-disabled', !state.enableBlur);
+    });
+
     let escTimer = null;
     const clearEscTimer = () => {
         if (escTimer) {

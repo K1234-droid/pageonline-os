@@ -233,6 +233,7 @@ export function initSettings(win) {
                 return `
                     <div class="settings-section ${animClass}">
                         <h2 class="section-title">${t('settings.appearance.sectionTitle', state.language)}</h2>
+                        
                         <div class="settings-group">
                             <label>${t('settings.appearance.wallpaper', state.language)}</label>
                             <div class="wallpaper-preview-container">
@@ -242,6 +243,30 @@ export function initSettings(win) {
                                     <button class="footer-btn primary btn-default-wallpaper">${t('settings.appearance.default', state.language)}</button>
                                     <label for="wallpaper-input" class="sr-only">${t('settings.appearance.upload', state.language)}</label>
                                     <input type="file" id="wallpaper-input" name="wallpaper_file_${Math.random().toString(36).substring(7)}" style="display:none" accept="image/*" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label>${t('settings.appearance.visuals', state.language)}</label>
+                            <div class="settings-switch-group">
+                                <div class="switch-item" id="animations-switch-item">
+                                    <div class="switch-content">
+                                        <span class="switch-label">${t('settings.appearance.animations', state.language)}</span>
+                                    </div>
+                                    <label class="switch-container">
+                                        <input type="checkbox" id="animations-toggle" ${state.enableAnimations ? 'checked' : ''}>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="switch-item" id="blur-switch-item">
+                                    <div class="switch-content">
+                                        <span class="switch-label">${t('settings.appearance.blur', state.language)}</span>
+                                    </div>
+                                    <label class="switch-container">
+                                        <input type="checkbox" id="blur-toggle" ${state.enableBlur ? 'checked' : ''}>
+                                        <span class="switch-slider"></span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -608,6 +633,30 @@ export function initSettings(win) {
                 }
             };
         }
+
+        const animationsSwitchItem = content.querySelector('#animations-switch-item');
+        const animationsToggle = content.querySelector('#animations-toggle');
+        if (animationsSwitchItem && animationsToggle) {
+            animationsSwitchItem.onclick = (e) => {
+                if (e.target !== animationsToggle) {
+                    animationsToggle.click();
+                }
+            };
+            animationsToggle.onclick = (e) => e.stopPropagation();
+            animationsToggle.onchange = (e) => setState({ enableAnimations: e.target.checked });
+        }
+
+        const blurSwitchItem = content.querySelector('#blur-switch-item');
+        const blurToggle = content.querySelector('#blur-toggle');
+        if (blurSwitchItem && blurToggle) {
+            blurSwitchItem.onclick = (e) => {
+                if (e.target !== blurToggle) {
+                    blurToggle.click();
+                }
+            };
+            blurToggle.onclick = (e) => e.stopPropagation();
+            blurToggle.onchange = (e) => setState({ enableBlur: e.target.checked });
+        }
     }
 
     let lastLanguage = state.language;
@@ -617,6 +666,8 @@ export function initSettings(win) {
     let lastPfp = state.profilePicture;
     let lastWall = state.desktopWallpaper;
     let lastFullscreen = state.alwaysShowFullscreen;
+    let lastAnimations = state.enableAnimations;
+    let lastBlur = state.enableBlur;
 
     win._updateSettingsUI = (s) => {
         const cropper = state.activeApps.find(a => a.id === 'settings' && a._isCropper);
@@ -633,7 +684,9 @@ export function initSettings(win) {
             s.dateDisplay !== lastDateImg ||
             s.profilePicture !== lastPfp ||
             s.desktopWallpaper !== lastWall ||
-            s.alwaysShowFullscreen !== lastFullscreen) {
+            s.alwaysShowFullscreen !== lastFullscreen ||
+            s.enableAnimations !== lastAnimations ||
+            s.enableBlur !== lastBlur) {
 
             lastLanguage = s.language;
             lastUsername = s.username;
@@ -642,6 +695,8 @@ export function initSettings(win) {
             lastPfp = s.profilePicture;
             lastWall = s.desktopWallpaper;
             lastFullscreen = s.alwaysShowFullscreen;
+            lastAnimations = s.enableAnimations;
+            lastBlur = s.enableBlur;
 
             render(true);
         }

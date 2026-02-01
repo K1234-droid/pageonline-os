@@ -87,10 +87,13 @@ const translations = {
                 timeYMD: 'Jam & Tanggal (YYYY/MM/DD)'
             },
             appearance: {
-                sectionTitle: 'Personalisasi',
-                wallpaper: 'Wallpaper Desktop',
-                upload: 'Unggah Gambar',
-                default: 'Gunakan Default'
+                sectionTitle: 'Tampilan',
+                wallpaper: 'Dekstop Wallpaper',
+                upload: 'Upload Gambar',
+                default: 'Gunakan Default',
+                visuals: 'Visual',
+                animations: 'Aktifkan Animasi',
+                blur: 'Efek Blur'
             },
             about: {
                 sectionTitle: 'Tentang Website',
@@ -159,7 +162,7 @@ const translations = {
                 home: 'Home',
                 profile: 'Profile',
                 general: 'General',
-                appearance: 'Appearance',
+                appearance: 'Display',
                 system: 'System',
                 about: 'About'
             },
@@ -195,10 +198,13 @@ const translations = {
                 timeYMD: 'Time & Date (YYYY/MM/DD)'
             },
             appearance: {
-                sectionTitle: 'Personalization',
-                wallpaper: 'Desktop Wallpaper',
+                sectionTitle: 'Display',
+                wallpaper: 'Dekstop Wallpaper',
                 upload: 'Upload Image',
-                default: 'Use Default'
+                default: 'Use Default',
+                visuals: 'Visuals',
+                animations: 'Enable Animation',
+                blur: 'Blur Effect'
             },
             about: {
                 sectionTitle: 'About Website',
