@@ -28,6 +28,8 @@ export function initSettings(win) {
         { id: 'clock', label: 'settings.general.clockFormat', section: 'general', selector: '.settings-group:nth-of-type(2)', icon: icons.general },
         { id: 'date', label: 'settings.general.dateDisplay', section: 'general', selector: '.settings-group:nth-of-type(3)', icon: icons.general },
         { id: 'wallpaper', label: 'settings.appearance.wallpaper', section: 'appearance', selector: '.wallpaper-preview-container', icon: icons.appearance },
+        { id: 'animations', label: 'settings.appearance.animations', section: 'appearance', selector: '#animations-switch-item', icon: icons.appearance },
+        { id: 'blur', label: 'settings.appearance.blur', section: 'appearance', selector: '#blur-switch-item', icon: icons.appearance },
         { id: 'fullscreen', label: 'settings.system.fullscreen.label', section: 'system', selector: '.switch-container', icon: icons.system },
         { id: 'about', label: 'settings.about.sectionTitle', section: 'about', selector: '.about-content', icon: icons.about }
     ];
@@ -712,7 +714,17 @@ export function initSettings(win) {
             setTimeout(() => {
                 const target = content.querySelector(scrollTargetSelector);
                 if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const container = content.querySelector('.settings-content');
+                    if (container) {
+                        const targetRect = target.getBoundingClientRect();
+                        const containerRect = container.getBoundingClientRect();
+                        const relativeTop = targetRect.top - containerRect.top;
+
+                        container.scrollTo({
+                            top: container.scrollTop + relativeTop - (container.offsetHeight / 2) + (target.offsetHeight / 2),
+                            behavior: 'smooth'
+                        });
+                    }
                     target.classList.add('highlight-flash');
                     setTimeout(() => target.classList.remove('highlight-flash'), 1000);
                 }

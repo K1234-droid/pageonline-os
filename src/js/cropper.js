@@ -35,6 +35,8 @@ export function initCropper(win, imageSrc, onSave, onCancel) {
     let isDragging = false;
     let startX = 0;
     let startY = 0;
+    let initialPinchDistance = 0;
+    let initialScale = 1;
 
     const frameSize = 250;
 
@@ -116,6 +118,60 @@ export function initCropper(win, imageSrc, onSave, onCancel) {
             render();
         }
     }, { passive: false });
+
+    function getPinchDistance(touches) {
+        return Math.hypot(
+            touches[0].clientX - touches[1].clientX,
+            touches[0].clientY - touches[1].clientY
+        );
+    }
+
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            isDragging = true;
+            startX = e.touches[0].clientX - offsetX;
+            startY = e.touches[0].clientY - offsetY;
+            container.style.cursor = 'grabbing';
+        } else if (e.touches.length === 2) {
+            isDragging = false;
+            initialPinchDistance = getPinchDistance(e.touches);
+            initialScale = scale;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isDragging) {
+            e.preventDefault();
+            offsetX = e.touches[0].clientX - startX;
+            offsetY = e.touches[0].clientY - startY;
+            clampOffsets();
+            render();
+        } else if (e.touches.length === 2 && initialPinchDistance > 0) {
+            e.preventDefault();
+            const currentDistance = getPinchDistance(e.touches);
+            const ratio = currentDistance / initialPinchDistance;
+            const newScale = Math.max(parseFloat(zoomSlider.min), Math.min(parseFloat(zoomSlider.max), initialScale * ratio));
+
+            if (newScale !== scale) {
+                scale = newScale;
+                zoomSlider.value = scale;
+                clampOffsets();
+                render();
+            }
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchend', () => {
+        isDragging = false;
+        initialPinchDistance = 0;
+        container.style.cursor = 'grab';
+    }, { passive: true });
+
+    container.addEventListener('touchcancel', () => {
+        isDragging = false;
+        initialPinchDistance = 0;
+        container.style.cursor = 'grab';
+    }, { passive: true });
 
     content.querySelector('#btn-crop-save').onclick = () => {
         const finalSize = 400;
