@@ -135,7 +135,7 @@ const translations = {
             pinToTaskbar: 'Pin to Taskbar',
             unpinFromTaskbar: 'Unpin from Taskbar',
             unpinFromDesktop: 'Delete',
-            confirmDeleteTitle: 'Confirm Delete',
+            confirmDeleteTitle: 'Confirm Deletion',
             confirmDeleteMsg: 'Are you sure you want to remove {name} from the desktop?',
             cancel: 'Cancel',
             delete: 'Delete',
